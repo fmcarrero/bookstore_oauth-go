@@ -24,7 +24,7 @@ type accessToken struct {
 }
 
 var (
-	oauthRestClient = resty.New().SetHostURL("http://localhost:8080").SetTimeout(200 * time.Millisecond)
+	oauthRestClient = resty.New().SetHostURL("http://localhost:8081").SetTimeout(200 * time.Millisecond)
 )
 
 func IsPublic(request *http.Request) bool {
