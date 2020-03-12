@@ -1,7 +1,7 @@
 package oauth
 
 import (
-	"errors"
+
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	"net/http"
@@ -69,8 +69,8 @@ func AuthenticateRequest(request *http.Request) error {
 	if err != nil {
 		return err
 	}
-	request.Header.Add(headerXClientId, string(at.ClientId))
-	request.Header.Add(headerXCallerId, string(at.UserId))
+	request.Header.Add(headerXClientId, fmt.Sprintf("%v", at.ClientId))
+	request.Header.Add(headerXCallerId, fmt.Sprintf("%v", at.UserId))
 	return nil
 }
 
@@ -86,16 +86,20 @@ func cleanRequest(request *http.Request) {
 func getAccessToken(accessTokenId string) (*accessToken, error) {
 	var errGetAccessToken error
 	var at accessToken
-	_, err := oauthRestClient.R().
+	resp, err := oauthRestClient.R().
 		SetHeader("Content-Type", "application/json").
 		SetError(&errGetAccessToken).
 		SetResult(&at).
 		Get(fmt.Sprintf("/oauth/access_token/%s", accessTokenId))
 	if err != nil {
-		return nil, errors.New(err.Error())
+		return nil, err
 	}
+
 	if errGetAccessToken != nil {
-		return nil, errors.New(errGetAccessToken.Error())
+		if resp.StatusCode() == http.StatusNotFound {
+			return nil, nil
+		}
+		return nil, errGetAccessToken
 	}
 	return &at, nil
 
