@@ -1,0 +1,14 @@
+[
+  {
+    "httpRequest": {
+      "path": "/oauth/access_token/abc123"
+    },
+    "httpResponse": {
+      "body": {
+        "id": "abc123",
+        "user_id": 1,
+        "client_id" : 1
+      }
+    }
+  }
+]

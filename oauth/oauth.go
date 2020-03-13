@@ -1,20 +1,22 @@
 package oauth
 
 import (
-
 	"fmt"
+	"github.com/fmcarrero/bookstore_utils-go/logger"
 	"github.com/go-resty/resty/v2"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 )
 
 const (
-	headerXPublic    = "X-Public"
-	headerXClientId  = "X-Client-Id"
-	headerXCallerId  = "X-Caller-Id"
-	paramAccessToken = "access_token"
+	headerXPublic       = "X-Public"
+	headerXClientId     = "X-Client-Id"
+	headerXCallerId     = "X-Caller-Id"
+	paramAccessToken    = "access_token"
+	portOAuthServiceEnv = "PORT_OAUTH_SERVICE"
 )
 
 type accessToken struct {
@@ -24,7 +26,7 @@ type accessToken struct {
 }
 
 var (
-	oauthRestClient = resty.New().SetHostURL("http://localhost:8081").SetTimeout(200 * time.Millisecond)
+	oauthRestClient *resty.Client
 )
 
 func IsPublic(request *http.Request) bool {
@@ -86,12 +88,15 @@ func cleanRequest(request *http.Request) {
 func getAccessToken(accessTokenId string) (*accessToken, error) {
 	var errGetAccessToken error
 	var at accessToken
+
+	validateClient()
 	resp, err := oauthRestClient.R().
 		SetHeader("Content-Type", "application/json").
 		SetError(&errGetAccessToken).
 		SetResult(&at).
 		Get(fmt.Sprintf("/oauth/access_token/%s", accessTokenId))
 	if err != nil {
+		logger.Error(err.Error(), err)
 		return nil, err
 	}
 
@@ -102,5 +107,11 @@ func getAccessToken(accessTokenId string) (*accessToken, error) {
 		return nil, errGetAccessToken
 	}
 	return &at, nil
+}
 
+func validateClient() {
+	if oauthRestClient == nil {
+		port := os.Getenv(portOAuthServiceEnv)
+		oauthRestClient = resty.New().SetHostURL(fmt.Sprintf("http://localhost:%s", port)).SetTimeout(200 * time.Millisecond)
+	}
 }
