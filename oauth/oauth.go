@@ -3,6 +3,7 @@ package oauth
 import (
 	"fmt"
 	"github.com/fmcarrero/bookstore_utils-go/logger"
+	"github.com/fmcarrero/bookstore_utils-go/rest_errors"
 	"github.com/go-resty/resty/v2"
 	"net/http"
 	"os"
@@ -57,7 +58,7 @@ func GetClientId(request *http.Request) int64 {
 	}
 	return clientId
 }
-func AuthenticateRequest(request *http.Request) error {
+func AuthenticateRequest(request *http.Request) rest_errors.RestErr {
 	if request == nil {
 		return nil
 	}
@@ -67,9 +68,13 @@ func AuthenticateRequest(request *http.Request) error {
 	if accessTokenId == "" {
 		return nil
 	}
-	at, err := getAccessToken(accessTokenId)
-	if err != nil {
-		return err
+
+	at, errRequest := getAccessToken(accessTokenId)
+	if errRequest != nil {
+		if errRequest.Status() == http.StatusNotFound {
+			return nil
+		}
+		return errRequest
 	}
 	request.Header.Add(headerXClientId, fmt.Sprintf("%v", at.ClientId))
 	request.Header.Add(headerXCallerId, fmt.Sprintf("%v", at.UserId))
@@ -85,26 +90,24 @@ func cleanRequest(request *http.Request) {
 
 }
 
-func getAccessToken(accessTokenId string) (*accessToken, error) {
-	var errGetAccessToken error
+func getAccessToken(accessTokenId string) (*accessToken, rest_errors.RestErr) {
+
 	var at accessToken
 
 	validateClient()
 	resp, err := oauthRestClient.R().
 		SetHeader("Content-Type", "application/json").
-		SetError(&errGetAccessToken).
 		SetResult(&at).
 		Get(fmt.Sprintf("/oauth/access_token/%s", accessTokenId))
 	if err != nil {
 		logger.Error(err.Error(), err)
-		return nil, err
+		restErr := rest_errors.NewInternalServerError(err.Error(), err)
+		return &at, restErr
 	}
-
-	if errGetAccessToken != nil {
-		if resp.StatusCode() == http.StatusNotFound {
-			return nil, nil
-		}
-		return nil, errGetAccessToken
+	if resp.StatusCode() > 299 {
+		body := string(resp.Body())
+		restErr := rest_errors.NewRestError(body, resp.StatusCode(), body, nil)
+		return &at, restErr
 	}
 	return &at, nil
 }

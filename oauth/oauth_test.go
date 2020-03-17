@@ -95,5 +95,19 @@ func TestAuthenticateRequest(t *testing.T) {
 	assert.NotNil(t, request)
 	assert.EqualValues(t, "1", request.Header.Get("X-Client-Id"), "failed when validated X-Client-Id")
 	assert.Nil(t, errFinal)
+}
+func TestAuthenticateRequest_Not_Found(t *testing.T) {
 
+	data, _ := ioutil.ReadFile("../test/resources/request_access_token_not_found.json")
+	requestBody := ioutil.NopCloser(bytes.NewReader(data))
+	requestLoadInformation, _ := http.NewRequest("PUT", host+"/expectation", requestBody)
+	_, _ = client.Do(requestLoadInformation)
+
+	request, _ := http.NewRequest("GET", host+"/users?access_token=abc123notfound", nil)
+
+	errFinal := AuthenticateRequest(request)
+
+	assert.NotNil(t, request)
+	assert.EqualValues(t, "", request.Header.Get("X-Client-Id"), "failed when validated X-Client-Id")
+	assert.Nil(t, errFinal)
 }

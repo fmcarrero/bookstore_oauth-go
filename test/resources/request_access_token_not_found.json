@@ -1,0 +1,17 @@
+[
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/oauth/access_token/abc123notfound"
+    },
+    "httpResponse": {
+        "statusCode": 404,
+        "body": {
+          "message" : "error not found abc123notfound",
+          "status" : 404,
+          "error" : "",
+          "causes" : "[]"
+        }
+      }
+  }
+]

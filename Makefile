@@ -18,6 +18,9 @@ vet: ## Run the vet tool
 clean: ## Clean up build artifacts
 	go clean -cache -modcache -i -r
 
+build: ## Clean up build artifacts
+	go build -v ./...
+
 docker-build: ## Build Docker image
 	docker build -t ${DOCKER_IMAGE_NAME} .
 
