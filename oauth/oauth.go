@@ -18,6 +18,7 @@ const (
 	headerXCallerId     = "X-Caller-Id"
 	paramAccessToken    = "access_token"
 	portOAuthServiceEnv = "PORT_OAUTH_SERVICE"
+	hostOAuthServiceEnv = "HOST_OAUTH_SERVICE"
 )
 
 type accessToken struct {
@@ -114,7 +115,8 @@ func getAccessToken(accessTokenId string) (*accessToken, rest_errors.RestErr) {
 
 func validateClient() {
 	if oauthRestClient == nil {
-		port := os.Getenv(portOAuthServiceEnv)
-		oauthRestClient = resty.New().SetHostURL(fmt.Sprintf("http://localhost:%s", port)).SetTimeout(200 * time.Millisecond)
+		port := fmt.Sprintf(":%s", os.Getenv(portOAuthServiceEnv))
+		host := os.Getenv(hostOAuthServiceEnv)
+		oauthRestClient = resty.New().SetHostURL(fmt.Sprintf("http://%s%s", host, port)).SetTimeout(200 * time.Millisecond)
 	}
 }

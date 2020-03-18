@@ -53,6 +53,7 @@ func configMockServer() (testcontainers.Container, context.Context) {
 		panic(err)
 	}
 	_ = os.Setenv("PORT_OAUTH_SERVICE", port.Port())
+	_ = os.Setenv("HOST_OAUTH_SERVICE", ip)
 	host = fmt.Sprintf("http://%s:%s", ip, port.Port())
 	return containerMockServer, ctx
 
